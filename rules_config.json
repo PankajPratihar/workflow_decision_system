@@ -1,0 +1,38 @@
+{
+  "rules": [
+    {
+      "field": "credit_score",
+      "operator": "<",
+      "value": 600,
+      "action": "reject"
+    },
+    {
+      "field": "income",
+      "operator": ">",
+      "value": 50000,
+      "then": [
+        {
+          "field": "employment_years",
+          "operator": ">",
+          "value": 2,
+          "action": "approve"
+        },
+        {
+          "field": "employment_years",
+          "operator": "<=",
+          "value": 2,
+          "action": "manual_review",
+          "reason": "Insufficient employment history"
+        }
+      ]
+    },
+    {
+      "field": "income",
+      "operator": "<=",
+      "value": 50000,
+      "action": "reject",
+      "reason": "Income below threshold"
+    }
+  ],
+  "default_action": "manual_review"
+}

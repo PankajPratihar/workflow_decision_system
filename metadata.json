@@ -1,0 +1,5 @@
+{
+  "name": "Workflow Decision Platform",
+  "description": "A configurable workflow engine with rule evaluation, idempotency, and audit logging.",
+  "requestFramePermissions": []
+}

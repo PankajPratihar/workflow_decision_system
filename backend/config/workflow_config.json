@@ -1,0 +1,27 @@
+{
+  "workflows": [
+    {
+      "id": "payment_processing",
+      "rules": [
+        {
+          "condition": "amount > 10000",
+          "action": "manual_review"
+        },
+        {
+          "condition": "currency != 'USD'",
+          "action": "reject",
+          "reason": "Only USD payments are supported"
+        },
+        {
+          "condition": "amount < 0",
+          "action": "reject",
+          "reason": "Negative amount not allowed"
+        },
+        {
+          "condition": "True",
+          "action": "approve"
+        }
+      ]
+    }
+  ]
+}

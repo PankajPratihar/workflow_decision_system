@@ -1,0 +1,26 @@
+{
+  "workflows": [
+    {
+      "id": "payment_workflow",
+      "rules": [
+        {
+          "condition": "amount === 777",
+          "action": "retry"
+        },
+        {
+          "condition": "amount > 1000",
+          "action": "manual_review"
+        },
+        {
+          "condition": "currency !== 'USD'",
+          "action": "reject",
+          "reason": "Only USD is supported"
+        },
+        {
+          "condition": "true",
+          "action": "approve"
+        }
+      ]
+    }
+  ]
+}

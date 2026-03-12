@@ -2,39 +2,42 @@
 
 A **configurable workflow decision system** built using FastAPI that processes incoming requests, evaluates rules, executes workflow stages, maintains state, and provides complete audit trails.
 
-This system demonstrates how business workflows such as **payments, claims, approvals, and verification processes** can be automated using a configurable rules engine.
+This system demonstrates how business workflows such as **payments, claims processing, approvals, and verification workflows** can be automated using a configurable rules engine.
 
 ---
 
-## Project Overview
+# Project Overview
 
-The platform accepts structured requests through an API or UI, evaluates configurable rules, and determines the correct workflow outcome such as:
+The platform accepts structured workflow requests via a REST API or UI, evaluates configurable rules, and determines the correct workflow outcome.
+
+Possible workflow outcomes:
 
 * Approve
 * Reject
 * Retry
 * Manual Review
 
-It also records every step in an **audit trail** to ensure transparency and explainability of decisions.
+Each workflow execution generates a **complete audit trail**, ensuring transparency, traceability, and explainability of decisions.
 
 ---
 
-## Key Features
+# Key Features
 
-* Configurable **rules engine**
-* Dynamic **workflow execution**
-* **Audit trail logging**
-* **State management** for request lifecycle
-* **Idempotent request handling**
-* **Decision explanation** showing triggered rules
-* **REST API** using FastAPI
+* Configurable **Rules Engine**
+* Dynamic **Workflow Execution Engine**
+* **Audit Trail Logging**
+* **State Management** for request lifecycle
+* **Idempotent Request Handling**
+* **Retry Logic for External Failures**
+* **Decision Explanation with Triggered Rule**
+* **REST API using FastAPI**
 * **PostgreSQL / SQLite database support**
 * **Docker containerization**
-* Interactive **UI dashboard for workflow execution**
+* Interactive **UI dashboard**
 
 ---
 
-## System Architecture
+# System Architecture
 
 ```
 Client / UI
@@ -49,50 +52,73 @@ Request Validation
 Rules Engine
       |
       v
-Workflow Engine
+Workflow Orchestrator
       |
       v
-Database (PostgreSQL / SQLite)
+State Manager + Idempotency Store
+      |
+      v
+Database (SQLite / PostgreSQL)
       |
       v
 Audit Logs + Decision History
 ```
 
----
-
-## Project Structure
+For a detailed architecture explanation see:
 
 ```
-workflow-decision-platform
+ARCHITECTURE.md
+```
+
+---
+
+# Project Structure
+
+```
+workflow_decision_system
 │
-├── app
-│   ├── api
-│   │   └── routes.py
-│   ├── core
-│   │   ├── rules_engine.py
-│   │   └── workflow_engine.py
-│   ├── models
-│   ├── services
-│   └── config
+├── backend
+├── src
 │
-├── database
+├── main.py
+├── database.py
+├── db_models.py
+├── models.py
+├── workflow_models.py
 │
-├── frontend
+├── rules_engine.py
+├── workflow_engine.py
+├── services.py
 │
-├── tests
+├── rules_config.json
+│
+├── example_queries.py
+├── workflow_demo.py
+├── test_workflow.py
 │
 ├── docker-compose.yml
 ├── Dockerfile
-├── requirements.txt
+├── DOCKER_INSTRUCTIONS.md
+│
+├── ARCHITECTURE.md
 ├── README.md
-└── architecture.md
+│
+├── index.html
+│
+├── metadata.json
+│
+├── package.json
+├── vite.config.ts
+├── server.ts
 ```
 
 ---
 
-## Workflow Configuration Example
+# Workflow Configuration Example
 
-Workflows are defined using a JSON configuration file.
+Workflows are configured using a JSON rule definition.
+
+Example:
 
 ```json
 {
@@ -106,26 +132,27 @@ Workflows are defined using a JSON configuration file.
 }
 ```
 
-This allows workflow logic to be updated **without changing the application code**.
+This allows business rules to be modified **without changing application code**.
 
 ---
 
-## API Endpoints
+# API Endpoints
 
-### Execute Workflow
+## Process Workflow Request
 
 ```
-POST /execute
+POST /process_request
 ```
 
 Example request:
 
 ```json
 {
- "request_id": "req_5838",
- "workflow_id": "payment_workflow",
- "amount": 50000,
- "currency": "USD"
+ "request_id": "req_100",
+ "payload": {
+   "amount": 50000,
+   "currency": "USD"
+ }
 }
 ```
 
@@ -133,50 +160,63 @@ Example response:
 
 ```json
 {
- "status": "completed",
- "decision": "manual_review",
- "triggered_rule": "amount > 1000"
+ "request_id": "req_100",
+ "status": "approved",
+ "result": {
+   "message": "External processing successful"
+ },
+ "audit_trail": [
+   {
+     "event": "WORKFLOW_STARTED"
+   },
+   {
+     "event": "EXTERNAL_CALL_ATTEMPT"
+   }
+ ]
 }
 ```
 
 ---
 
-### Decision History
+## Decision History
 
 ```
 GET /decision/{request_id}
 ```
 
-Returns decision history and audit trail for a request.
+Returns decision history and audit trail for a workflow request.
 
 ---
 
-## Audit Trail Example
+# Audit Trail Example
 
 ```
-12:36:59 INITIALIZATION  Starting workflow
-12:36:59 DECISION        Rule evaluation result: manual_review
-12:36:59 EXECUTION       Executing manual review logic
-12:36:59 COMPLETION      Workflow finished successfully
+WORKFLOW_STARTED
+EXTERNAL_CALL_ATTEMPT
+EXTERNAL_CALL_FAILURE
+RETRY_WAIT
+WORKFLOW_COMPLETED
 ```
+
+This enables **complete traceability of workflow decisions**.
 
 ---
 
-## Running the Project (Local)
+# Running the Project Locally
 
-Install dependencies:
-
-```
-pip install -r requirements.txt
-```
-
-Start the server:
+### Install Dependencies
 
 ```
-uvicorn app.main:app --reload
+pip install fastapi uvicorn sqlalchemy psycopg2-binary
 ```
 
-Open the API docs:
+### Start the FastAPI Server
+
+```
+uvicorn main:app --reload
+```
+
+### Open API Documentation
 
 ```
 http://127.0.0.1:8000/docs
@@ -184,9 +224,9 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## Running with Docker
+# Running with Docker
 
-Make sure Docker is installed.
+Ensure Docker is installed.
 
 Start the platform:
 
@@ -194,55 +234,55 @@ Start the platform:
 docker-compose up --build
 ```
 
+This launches:
+
+* FastAPI backend
+* PostgreSQL database
+
 Access the application:
 
 ```
 http://localhost:3000
 ```
 
-The system will automatically start:
-
-* FastAPI application
-* PostgreSQL database
-
 ---
 
-## Database
+# Database
 
-The system supports two databases:
+The platform supports two databases:
 
-* SQLite (local development)
-* PostgreSQL (production via Docker)
+* **SQLite** (local development)
+* **PostgreSQL** (Docker deployment)
 
 Tables include:
 
 * Requests
 * Audit Logs
-* Processed Requests (for idempotency)
+* Processed Requests (Idempotency)
 
 ---
 
-## Testing
+# Testing
 
-Run tests using:
+Run automated tests:
 
 ```
 pytest
 ```
 
-Test scenarios include:
+Test cases include:
 
-* Valid workflow execution
-* Invalid input validation
-* Duplicate request handling
-* Rule evaluation correctness
-* Failure and retry scenarios
+* Workflow execution
+* Rule evaluation
+* Idempotent request handling
+* Retry logic
+* Failure scenarios
 
 ---
 
-## Scalability Considerations
+# Scalability Considerations
 
-Future improvements may include:
+Future improvements could include:
 
 * Distributed workflow workers
 * Message queues (RabbitMQ / Kafka)
@@ -252,7 +292,7 @@ Future improvements may include:
 
 ---
 
-## Technologies Used
+# Technologies Used
 
 * Python
 * FastAPI
@@ -260,17 +300,18 @@ Future improvements may include:
 * PostgreSQL
 * SQLite
 * Docker
-* JavaScript / HTML UI
+* HTML / JavaScript
 
 ---
 
-## Author
+# Author
 
-Pankaj Pratihar
+**Pankaj Pratihar**
 BTech – Metallurgy and Materials Engineering
+NIT Rourkela
 
 ---
 
-## License
+# License
 
-This project is for **educational and hackathon purposes**.
+This project is created for **educational and hackathon demonstration purposes**.
